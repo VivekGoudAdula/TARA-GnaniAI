@@ -52,7 +52,7 @@ class CommunicationDispatcher:
         record = await db[coll_name].find_one({"tenant_id": tenant_id, "record_id": rec_id})
 
         # 3. Evaluate compliance gate
-        allowed, reason = await evaluate_compliance_gate(
+        allowed, reason, window_override = await evaluate_compliance_gate(
             tenant_id=tenant_id,
             record=record,
             channel=request.channel,
@@ -71,6 +71,7 @@ class CommunicationDispatcher:
             campaign_id=request.campaign_id,
             reason_code=reason,
             timestamp=now,
+            window_override=window_override,
         )
 
         # 5. Handle blocked outcome
@@ -137,3 +138,4 @@ class CommunicationDispatcher:
             status="queued",
             task_token=task_info["token"],
         )
+

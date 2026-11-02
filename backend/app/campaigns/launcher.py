@@ -168,3 +168,60 @@ async def cancel_campaign(tenant_id: str, campaign_id: str) -> Dict[str, Any]:
         {"$set": {"status": "cancelled", "updated_at": now}},
     )
     return {"status": "cancelled", "campaign_id": campaign_id}
+
+
+async def retry_failed_dispatch(
+    tenant_id: str,
+    campaign_id: str,
+    record_id: str,
+    comm_port: CommunicationPort,
+) -> Dict[str, Any]:
+    """Retry an interaction that previously ended in failed or no_answer, re-checking the gate."""
+    db = get_db()
+    camp = await db["campaigns"].find_one({"tenant_id": tenant_id, "id": campaign_id})
+    if not camp:
+        raise HTTPException(status_code=404, detail="Campaign not found.")
+
+    rec = await db["campaign_recipients"].find_one({"tenant_id": tenant_id, "campaign_id": campaign_id, "record_id": record_id})
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recipient not in campaign snapshot.")
+
+    attempts = rec.get("attempts", 1)
+    retry_policy = camp.get("retry_policy", {"max_attempts": 3, "retry_interval_minutes": 60})
+    if attempts >= retry_policy.get("max_attempts", 3):
+        raise HTTPException(status_code=400, detail="Maximum retry attempts exceeded.")
+
+    config_version = camp.get("current_voice_config_version", 1)
+    rendered_dict = await render_recipient_preview(tenant_id, campaign_id, record_id)
+    rendered_payload = RenderedVoicePayload(**rendered_dict)
+
+    # Use unique idempotency key for retry attempt
+    idempotency_key = f"camp_{campaign_id}_{record_id}_v{config_version}_att{attempts + 1}"
+    req = SendCommunicationRequest(
+        recipient_ref=RecipientRef(record_id=record_id, record_type=camp["audience_type"]),
+        channel="voice",
+        campaign_id=campaign_id,
+        config_version=config_version,
+        rendered=rendered_payload,
+        idempotency_key=idempotency_key,
+        metadata={"source": "retry_dispatch", "attempt": attempts + 1},
+    )
+
+    # Gate is strictly re-evaluated inside comm_port.dispatch
+    res = await comm_port.dispatch(tenant_id=tenant_id, request=req)
+
+    update_data = {
+        "communication_id": res.communication_id,
+        "status": res.status,
+        "blocked_reason": res.reason,
+        "task_token": res.task_token,
+        "call_url": f"/call/{res.task_token}" if res.task_token else None,
+        "attempts": attempts + 1,
+        "updated_at": datetime.now(timezone.utc),
+    }
+    await db["campaign_recipients"].update_one(
+        {"tenant_id": tenant_id, "campaign_id": campaign_id, "record_id": record_id},
+        {"$set": update_data},
+    )
+    return {"status": res.status, "attempts": attempts + 1, "communication_id": res.communication_id}
+

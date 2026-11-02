@@ -18,6 +18,7 @@ export default function Dashboard({ setActiveNav }) {
   })
   const [governanceSummary, setGovernanceSummary] = useState(null)
   const [isScoring, setIsScoring] = useState(false)
+  const [demoGuideOpen, setDemoGuideOpen] = useState(false)
 
   const loadData = async () => {
     try {
@@ -82,6 +83,48 @@ export default function Dashboard({ setActiveNav }) {
         <span className="text-[10px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-semibold uppercase">
           Synthetic Only
         </span>
+      </div>
+
+      {/* Collapsible 5-Step Demo Guide */}
+      <div className="bg-white border border-brand-200 rounded-xl overflow-hidden shadow-xs">
+        <button
+          onClick={() => setDemoGuideOpen(!demoGuideOpen)}
+          className="w-full p-3.5 bg-brand-50/70 hover:bg-brand-50 flex items-center justify-between text-left transition"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">🧭</span>
+            <div>
+              <span className="text-xs font-bold text-brand-950">5-Step Evaluator Demo Guide</span>
+              <span className="text-[11px] text-brand-700 ml-2">(Click to {demoGuideOpen ? 'collapse' : 'expand'})</span>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-brand-700">{demoGuideOpen ? '▲ Hide' : '▼ View Walkthrough'}</span>
+        </button>
+
+        {demoGuideOpen && (
+          <div className="p-4 bg-white space-y-2.5 border-t border-brand-100 text-xs">
+            <div className="flex gap-2.5 items-start">
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+              <p className="text-gray-700"><strong>Review Scored Audience:</strong> Check <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">Customers</code> and <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">Products</code> to inspect transparent eligibility criteria and explainable feature contributions.</p>
+            </div>
+            <div className="flex gap-2.5 items-start">
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+              <p className="text-gray-700"><strong>Inspect Campaign Setup:</strong> Navigate to <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">Campaigns</code> &gt; <em>Personal Loan: High Intent</em> to inspect AI disclosure opening messages and per-language voice mappings (Hindi, Telugu, English).</p>
+            </div>
+            <div className="flex gap-2.5 items-start">
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+              <p className="text-gray-700"><strong>Launch in Test Mode:</strong> Click <em>Launch Campaign</em>. The confirmation guard requires typing the exact recipient count to prevent accidental dispatches.</p>
+            </div>
+            <div className="flex gap-2.5 items-start">
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
+              <p className="text-gray-700"><strong>Conduct Voice Tester Call:</strong> Click a recipient's <em>Call Link</em>. Speak via microphone or use typed fallback across Hindi, Telugu, or English. Observe real-time turns, latencies, and strictly grounded post-call entity extraction.</p>
+            </div>
+            <div className="flex gap-2.5 items-start">
+              <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">5</span>
+              <p className="text-gray-700"><strong>Audit Trail &amp; Outcomes:</strong> Inspect <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">Governance</code> to review immutable gate decisions (consent, DND, calling window) and export campaign interaction CSVs.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Top Header */}

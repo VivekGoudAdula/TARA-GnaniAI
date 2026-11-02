@@ -18,8 +18,12 @@ security = HTTPBearer(auto_error=False)
 
 
 def get_jwt_secret() -> str:
-    """Return JWT secret key from environment or fallback default (at least 32 bytes)."""
-    return os.getenv("JWT_SECRET", "tara_jwt_secret_key_gnani_internship_challenge_2026_super_secure")
+    """Return JWT secret key from environment; requires explicit env var in production."""
+    secret = os.getenv("JWT_SECRET")
+    is_dev = os.getenv("DEV_ENDPOINTS", "true").lower() == "true"
+    if not is_dev and (not secret or secret.startswith("tara_jwt_secret_key")):
+        raise RuntimeError("Production mode requires an explicit JWT_SECRET set in environment.")
+    return secret or "tara_jwt_secret_key_gnani_internship_challenge_2026_super_secure"
 
 
 def get_jwt_algorithm() -> str:

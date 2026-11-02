@@ -50,7 +50,7 @@ async def test_compliance_gate_consent_and_dnd():
         "tenant_id": t_id, "record_id": "r_noconsent",
         "consent": False, "dnd": False, "phone": "+919000011111"
     }
-    ok, reason = await evaluate_compliance_gate(t_id, no_consent_rec, "voice", evaluation_time=valid_time)
+    ok, reason, _ = await evaluate_compliance_gate(t_id, no_consent_rec, "voice", evaluation_time=valid_time)
     assert ok is False
     assert reason == ComplianceReason.CONSENT_MISSING
 
@@ -59,7 +59,7 @@ async def test_compliance_gate_consent_and_dnd():
         "tenant_id": t_id, "record_id": "r_dnd",
         "consent": True, "dnd": True, "phone": "+919000022222"
     }
-    ok, reason = await evaluate_compliance_gate(t_id, dnd_rec, "voice", evaluation_time=valid_time)
+    ok, reason, _ = await evaluate_compliance_gate(t_id, dnd_rec, "voice", evaluation_time=valid_time)
     assert ok is False
     assert reason == ComplianceReason.DND_FLAGGED
 
@@ -82,7 +82,7 @@ async def test_compliance_gate_frequency_and_duplicate_in_flight():
     ])
 
     # 3rd attempt must trigger FREQUENCY_CAP
-    ok, reason = await evaluate_compliance_gate(t_id, rec, "voice", evaluation_time=valid_time)
+    ok, reason, _ = await evaluate_compliance_gate(t_id, rec, "voice", evaluation_time=valid_time)
     assert ok is False
     assert reason == ComplianceReason.FREQUENCY_CAP
 
@@ -91,7 +91,7 @@ async def test_compliance_gate_frequency_and_duplicate_in_flight():
     await db["communications"].insert_one({
         "tenant_id": t_id, "record_id": "r_inflight", "status": "in_progress", "created_at": valid_time
     })
-    ok2, reason2 = await evaluate_compliance_gate(t_id, rec2, "voice", evaluation_time=valid_time)
+    ok2, reason2, _ = await evaluate_compliance_gate(t_id, rec2, "voice", evaluation_time=valid_time)
     assert ok2 is False
     assert reason2 == ComplianceReason.DUPLICATE_IN_FLIGHT
 
@@ -105,12 +105,12 @@ async def test_compliance_gate_tenant_mismatch_and_channel_and_audit_log():
 
     # Tenant mismatch
     wrong_rec = {"tenant_id": "other_tenant", "record_id": "r_other", "consent": True, "dnd": False}
-    ok, reason = await evaluate_compliance_gate(t_id, wrong_rec, "voice")
+    ok, reason, _ = await evaluate_compliance_gate(t_id, wrong_rec, "voice")
     assert ok is False
     assert reason == ComplianceReason.TENANT_MISMATCH
 
     # Invalid channel
-    ok2, reason2 = await evaluate_compliance_gate(t_id, {"tenant_id": t_id, "record_id": "r_chan", "consent": True}, "sms")
+    ok2, reason2, _ = await evaluate_compliance_gate(t_id, {"tenant_id": t_id, "record_id": "r_chan", "consent": True}, "sms")
     assert ok2 is False
     assert reason2 == ComplianceReason.INVALID_CHANNEL_CONFIG
 
@@ -125,3 +125,26 @@ async def test_compliance_gate_tenant_mismatch_and_channel_and_audit_log():
     persisted = await db["audit_log"].find_one({"tenant_id": t_id, "communication_id": "comm_aud_1"})
     assert persisted is not None
     assert persisted["decision"] == "BLOCKED"
+
+
+@pytest.mark.asyncio
+async def test_calling_window_demo_override():
+    """Verify calling_window_mode='demo_override' bypasses window hours but keeps other gate rules."""
+    db = get_db()
+    t_id = f"ten_ovr_{uuid.uuid4().hex[:6]}"
+    # 23:00 IST -> normally outside calling window
+    late_time = datetime(2026, 11, 2, 23, 0, 0, tzinfo=IST)
+    await db["tenants"].insert_one({"tenant_id": t_id, "name": "Override Bank", "calling_window_mode": "demo_override"})
+
+    rec = {"tenant_id": t_id, "record_id": "r_ovr", "consent": True, "dnd": False, "phone": "+919000088888"}
+    ok, reason, ovr = await evaluate_compliance_gate(t_id, rec, "voice", evaluation_time=late_time)
+    assert ok is True
+    assert reason is None
+    assert ovr is True
+
+    # Other rules still block even with override
+    rec_dnd = {"tenant_id": t_id, "record_id": "r_dnd_ovr", "consent": True, "dnd": True, "phone": "+919000088888"}
+    ok_dnd, reason_dnd, _ = await evaluate_compliance_gate(t_id, rec_dnd, "voice", evaluation_time=late_time)
+    assert ok_dnd is False
+    assert reason_dnd == ComplianceReason.DND_FLAGGED
+

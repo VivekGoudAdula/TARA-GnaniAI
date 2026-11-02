@@ -113,3 +113,4 @@ export default function CampaignOutcomesTab({ campaignId, authFetch }) {
     </div>
   )
 }
+

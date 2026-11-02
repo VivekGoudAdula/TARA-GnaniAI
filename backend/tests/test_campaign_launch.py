@@ -118,3 +118,4 @@ async def test_campaign_launch_refusal_and_successful_test_launch():
         assert export_res.status_code == 200
         assert "text/csv" in export_res.headers["content-type"]
         assert "communication_id" in export_res.text
+

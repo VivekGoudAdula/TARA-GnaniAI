@@ -5,10 +5,11 @@ Enforces tenant association on all newly registered accounts.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import time
+from typing import Any, Dict, List
 import uuid
-from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
 from app.auth import (
@@ -21,6 +22,20 @@ from app.auth import (
 from app.db import get_db
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+_login_rate_limits: Dict[str, List[float]] = {}
+
+
+def check_login_rate_limit(key: str, max_attempts: int = 10, window_sec: float = 60.0) -> None:
+    now = time.time()
+    attempts = [t for t in _login_rate_limits.get(key, []) if now - t < window_sec]
+    if len(attempts) >= max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please wait before retrying.",
+        )
+    attempts.append(now)
+    _login_rate_limits[key] = attempts
 
 
 class SignupRequest(BaseModel):
@@ -86,6 +101,7 @@ async def signup(payload: SignupRequest) -> AuthResponse:
 @router.post("/login", response_model=AuthResponse)
 async def login(payload: LoginRequest) -> AuthResponse:
     """Authenticate existing user credentials and return scoped JWT token."""
+    check_login_rate_limit(payload.email.lower())
     db = get_db()
     user = await db["users"].find_one({"email": payload.email.lower()})
     if not user or not verify_password(payload.password, user.get("password_hash", "")):

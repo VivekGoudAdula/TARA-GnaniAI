@@ -121,3 +121,4 @@ async def test_public_call_task_token_sanitization_and_single_use():
         # Attempting second use returns 410 Gone
         re_res = await client.get(f"/api/call-task/{token_str}")
         assert re_res.status_code == 410
+

@@ -11,7 +11,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 
 from app.auth import TokenUser, get_current_user
-from app.campaigns.launcher import cancel_campaign, launch_campaign, pause_campaign, resume_campaign
+from app.campaigns.launcher import (
+    cancel_campaign,
+    launch_campaign,
+    pause_campaign,
+    resume_campaign,
+    retry_failed_dispatch,
+)
 from app.communication.dispatcher import CommunicationDispatcher
 from app.communication.provider import GnaniWebVoiceProvider
 from app.db import get_db
@@ -63,6 +69,21 @@ async def cancel_campaign_endpoint(
 ) -> Dict[str, Any]:
     """Cancel a campaign and halt further dispatches."""
     return await cancel_campaign(current_user.tenant_id, campaign_id)
+
+
+@router.post("/{campaign_id}/retry/{record_id}")
+async def retry_campaign_recipient_endpoint(
+    campaign_id: str,
+    record_id: str,
+    current_user: TokenUser = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Retry a failed or uncontacted recipient, re-evaluating the compliance gate."""
+    return await retry_failed_dispatch(
+        tenant_id=current_user.tenant_id,
+        campaign_id=campaign_id,
+        record_id=record_id,
+        comm_port=_dispatcher,
+    )
 
 
 @router.get("/{campaign_id}/outcomes")
@@ -161,3 +182,4 @@ async def export_interactions_csv(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=campaign_{campaign_id}_interactions.csv"},
     )
+

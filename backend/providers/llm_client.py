@@ -98,14 +98,16 @@ class LLMClient:
         )
 
         extraction_system_prompt = (
-            "You are a structured data extractor for voice calls. Return ONLY a valid JSON object matching:\n"
-            "- interest_level: one of ['high', 'medium', 'low', 'none', 'unknown']\n"
-            "- loan_amount_inr: number in INR (e.g. 100000) or null if not spoken. NEVER invent values.\n"
-            "- callback_time: string or null if not spoken. NEVER invent values.\n"
-            "- language_used: list of language codes observed (e.g. ['en-IN', 'hi-IN'])\n"
-            "- outcome: one of ['interested', 'not_interested', 'callback', 'no_answer', 'unclear']\n"
-            "- summary: concise 2-3 sentence English summary\n"
-            "Output strictly valid JSON and nothing else. No markdown fences."
+            "You are a factual structured data extractor for voice calls. Extract ONLY information explicitly spoken in the transcript.\n"
+            "CRITICAL RULES:\n"
+            "1. NEVER assume, extrapolate, or invent product names, loan amounts, interest rates, or callback times that were not explicitly spoken.\n"
+            "2. loan_amount_inr: numeric value in INR (e.g. 500000) ONLY if explicitly stated in transcript, otherwise null.\n"
+            "3. callback_time: string of spoken time/date ONLY if explicitly stated in transcript, otherwise null.\n"
+            "4. interest_level: one of ['high', 'medium', 'low', 'none', 'unknown'].\n"
+            "5. language_used: list of language codes observed in transcript.\n"
+            "6. outcome: one of ['interested', 'not_interested', 'callback', 'no_answer', 'unclear'].\n"
+            "7. summary: concise factual summary describing ONLY what was explicitly said. Do not invent details.\n"
+            "Output strictly valid JSON and nothing else."
         )
 
         messages = [

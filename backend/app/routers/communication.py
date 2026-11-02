@@ -5,6 +5,7 @@ and public tester session tokens.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import time
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -68,9 +69,25 @@ async def list_communications(
 
 # ─── Public Tester Session Endpoints (No JWT Required) ───────────────────────
 
+_task_rate_limits: Dict[str, List[float]] = {}
+
+
+def check_task_rate_limit(token: str, max_attempts: int = 30, window_sec: float = 60.0) -> None:
+    now = time.time()
+    attempts = [t for t in _task_rate_limits.get(token, []) if now - t < window_sec]
+    if len(attempts) >= max_attempts:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded for call task tokens.",
+        )
+    attempts.append(now)
+    _task_rate_limits[token] = attempts
+
+
 @router.get("/api/call-task/{token}")
 async def get_call_task(token: str) -> Dict[str, Any]:
     """Retrieve public rendered voice payload for a single-use tester token."""
+    check_task_rate_limit(token)
     db = get_db()
     task = await db["call_tasks"].find_one({"token": token}, {"_id": 0})
     if not task:
@@ -148,3 +165,4 @@ async def complete_call_task(token: str, outcome_payload: Dict[str, Any]) -> Dic
         await provider.complete_session_outcome(comm_id, outcome_payload)
 
     return {"status": "completed"}
+

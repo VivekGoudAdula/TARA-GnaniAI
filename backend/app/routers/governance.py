@@ -88,3 +88,30 @@ async def get_dashboard_governance_summary(current_user: TokenUser = Depends(get
         "blocked_by_reason": blocked_by_reason,
         "last_campaign": last_camp,
     }
+
+
+@router.get("/calling-window-mode")
+async def get_calling_window_mode(current_user: TokenUser = Depends(get_current_user)) -> Dict[str, Any]:
+    """Retrieve current calling window mode ('strict' or 'demo_override')."""
+    db = get_db()
+    cfg = await db["tenant_configs"].find_one({"tenant_id": current_user.tenant_id}) or {}
+    return {"calling_window_mode": cfg.get("calling_window_mode", "strict")}
+
+
+@router.put("/calling-window-mode")
+async def set_calling_window_mode(
+    payload: Dict[str, Any],
+    current_user: TokenUser = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Toggle calling window mode ('strict' or 'demo_override') for tenant."""
+    mode = payload.get("calling_window_mode", "strict")
+    if mode not in ("strict", "demo_override"):
+        mode = "strict"
+    db = get_db()
+    await db["tenant_configs"].update_one(
+        {"tenant_id": current_user.tenant_id},
+        {"$set": {"calling_window_mode": mode}},
+        upsert=True,
+    )
+    return {"status": "updated", "calling_window_mode": mode}
+

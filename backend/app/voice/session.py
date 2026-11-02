@@ -60,6 +60,7 @@ class VoiceSession:
         self.speaking_task: Optional[asyncio.Task] = None
         self._interrupted = False
         self._session_doc: Optional[Dict[str, Any]] = None
+        self.extraction: Optional[Any] = None
 
     async def _send_event(self, msg: Dict[str, Any]) -> None:
         """Deliver event to websocket listener, supporting both sync and async callbacks."""
@@ -210,6 +211,7 @@ class VoiceSession:
             info_to_collect=self.config.get("info_to_collect", []),
             success_condition=self.config.get("success_condition", ""),
         )
+        self.extraction = extracted
 
         doc = {
             "session_id": self.session_id,
