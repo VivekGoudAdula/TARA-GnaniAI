@@ -8,7 +8,7 @@
 - Earlier conceptual explorations were prototyped on external, non-Gnani voice technology stacks [OWNER TO CONFIRM: specific historical prototypes and dates].
 
 ## 2. From-Scratch Implementation for this Challenge
-- **This codebase is a ground-up, clean-room implementation created specifically for the Gnani AI Internship Challenge.**
+- **This codebase is a ground-up implementation created specifically for the Gnani AI Internship Challenge.**
 - As proven by the repository git commit history (starting from initial commit `038166c` on Nov 2, 2026), every module was constructed from scratch following the 7-phase build plan.
 - [OWNER TO CONFIRM: whether any minor utility functions or schemas were inspired by earlier notes; repo git history confirms all files were newly authored].
 
@@ -27,3 +27,4 @@
 5. **Campaign Orchestration & Public Tester Interface**:
    - Decoupled `CommunicationPort` architecture separating campaign management from dispatch execution.
    - Single-use, expiring, 128-bit randomized tester tokens with in-browser microphone capture and typed fallback.
+

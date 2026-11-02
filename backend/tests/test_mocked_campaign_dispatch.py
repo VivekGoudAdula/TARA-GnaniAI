@@ -24,7 +24,7 @@ async def test_mocked_campaign_dispatch_and_interaction_recording():
     headers = {"Authorization": f"Bearer {token}"}
 
     prod_id = f"prd_live_{uuid.uuid4().hex[:6]}"
-    await db["products"].insert_one({"tenant_id": t_id, "product_id": prod_id, "name": "Live Gold Loan", "active": True})
+    await db["products"].insert_one({"tenant_id": t_id, "product_id": prod_id, "name": "Live Personal Loan", "active": True})
     await db["tenants"].insert_one({"tenant_id": t_id, "name": "Live Test Bank"})
 
     # Seed 2 customer records
@@ -40,7 +40,7 @@ async def test_mocked_campaign_dispatch_and_interaction_recording():
     camp_id = f"camp_live_{uuid.uuid4().hex[:6]}"
     await db["campaigns"].insert_one({
         "id": camp_id, "tenant_id": t_id, "name": "Live Test Outreach",
-        "product_id": prod_id, "product_name": "Live Gold Loan",
+        "product_id": prod_id, "product_name": "Live Personal Loan",
         "audience_type": "customers", "status": "ready",
         "recipient_count": 2, "current_voice_config_version": 1,
     })
@@ -52,7 +52,7 @@ async def test_mocked_campaign_dispatch_and_interaction_recording():
         "campaign_id": camp_id, "tenant_id": t_id, "version": 1,
         "config": {
             "default_language": "hi-IN",
-            "system_prompt": "Help {{first_name}} with gold loan",
+            "system_prompt": "Help {{first_name}} with personal loan",
             "opening_message": "Hello {{first_name}}, I am an automated AI assistant calling from {{bank_name}}.",
             "conversation_objective": "Sell", "success_condition": "Yes",
             "info_to_collect": [{"field": "interest", "question": "Interested?", "required": True}],
@@ -89,11 +89,11 @@ async def test_mocked_campaign_dispatch_and_interaction_recording():
                 "callback_time": "Tomorrow 3 PM",
                 "language_used": ["hi-IN"],
                 "outcome": "interested",
-                "summary": "Customer interested in 2.5L Gold Loan at 8.5%",
+                "summary": "Customer interested in 2.5L Personal Loan",
             },
             "transcript": [
                 {"speaker": "agent", "text": "Hello Deepak, I am an AI assistant.", "latency_ms": 1500},
-                {"speaker": "user", "text": "Yes, I need a gold loan.", "latency_ms": 200},
+                {"speaker": "user", "text": "Yes, I need a personal loan.", "latency_ms": 200},
             ],
             "voice_used": {"1": "Nalini"},
         })

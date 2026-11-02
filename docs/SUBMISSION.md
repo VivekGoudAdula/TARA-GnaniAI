@@ -14,6 +14,7 @@ Retail banks and NBFCs in India struggle to engage multilingual customers effect
 ## 4. Gnani AI Models & APIs Used
 - **Gnani Prisma v3.0**: Speech-to-Text with real-time `indic-auto` language detection across Hindi, Telugu, and English.
 - **Gnani Timbre v2.5**: Text-to-Speech using Indic voices (`Nalini` for en-IN and hi-IN, `Suhana` for te-IN) over streaming SSE.
+- **External LLM**: `qwen/qwen3.8-27b` via Groq API for single-turn conversational pacing and grounded post-call extraction.
 - *Explicit Non-Usage Disclosure*: Gnani Agent Builder is **NOT** used. Evon is **NOT** used.
 
 ## 5. Team Contributions
@@ -28,3 +29,4 @@ Unlike conventional dialing systems, TARA enforces strict deterministic governan
 Once verified, TARA generates secure, single-use web-based tester links for verified test profiles. In each interactive session, TARA speaks concisely, identifies itself as an automated AI representative, asks one question at a time, and never guarantees loan approval or unverified rates. Following each conversation, a factual post-call extractor parses customer outcomes strictly grounded in spoken transcript words.
 
 All demonstrations and benchmarks operate exclusively on synthetic banking personas and rule-generated evaluation sets without accessing real telephone networks or live financial data. By bridging intelligent Indic speech AI with rigorous regulatory guardrails, TARA demonstrates how banks can conduct respectful, automated multilingual outreach.
+

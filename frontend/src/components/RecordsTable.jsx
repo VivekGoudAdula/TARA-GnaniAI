@@ -83,7 +83,7 @@ export default function RecordsTable({ recordType }) {
               Trained on synthetic data
             </span>
           </div>
-          <p className="text-xs text-gray-500">Audience scoring, eligibility, and conversion ranking</p>
+          <p className="text-xs text-gray-500">Audience scoring, eligibility, and outreach fit ranking</p>
         </div>
 
         <button

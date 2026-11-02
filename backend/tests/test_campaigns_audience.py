@@ -32,7 +32,8 @@ async def test_audience_preview_100_fixture():
         score = 85 if band == "HIGH" else (65 if band == "MEDIUM" else 40)
         cust_docs.append({
             "record_id": rid, "tenant_id": t_id, "full_name": f"User {i}",
-            "preferred_language": "en-IN", "city": "Mumbai", "consent": True, "dnd": False
+            "preferred_language": "en-IN", "city": "Mumbai", "phone": f"+9190000{i:05d}",
+            "consent": True, "dnd": False
         })
         match_docs.append({
             "tenant_id": t_id, "product_id": prod_id, "record_id": rid,
@@ -81,10 +82,10 @@ async def test_snapshot_immutability_and_exclusion_rules():
     await db["products"].insert_one({"tenant_id": t_id, "product_id": prod_id, "name": "Credit Card", "active": True})
 
     records = [
-        {"record_id": "r1", "tenant_id": t_id, "full_name": "Ramesh Gupta", "consent": True, "dnd": False, "preferred_language": "hi-IN"},
-        {"record_id": "r2", "tenant_id": t_id, "full_name": "Suresh Patel", "consent": True, "dnd": True, "preferred_language": "en-IN"},
-        {"record_id": "r3", "tenant_id": t_id, "full_name": "Amit Sharma", "consent": True, "dnd": False, "preferred_language": "hi-IN"},
-        {"record_id": "r4", "tenant_id": t_id, "full_name": "Priya Das", "consent": True, "dnd": False, "preferred_language": "en-IN"},
+        {"record_id": "r1", "tenant_id": t_id, "full_name": "Ramesh Gupta", "phone": "+919000088881", "consent": True, "dnd": False, "preferred_language": "hi-IN"},
+        {"record_id": "r2", "tenant_id": t_id, "full_name": "Suresh Patel", "phone": "+919000088882", "consent": True, "dnd": True, "preferred_language": "en-IN"},
+        {"record_id": "r3", "tenant_id": t_id, "full_name": "Amit Sharma", "phone": "+919000088883", "consent": True, "dnd": False, "preferred_language": "hi-IN"},
+        {"record_id": "r4", "tenant_id": t_id, "full_name": "Priya Das", "phone": "+919000088884", "consent": True, "dnd": False, "preferred_language": "en-IN"},
     ]
     matches = [
         {"tenant_id": t_id, "product_id": prod_id, "record_id": "r1", "fit_score": 90, "band": "HIGH", "eligible": True},

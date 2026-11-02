@@ -22,6 +22,8 @@
 - Open generated single-use tester link (`/call/{token}`).
 - Conduct conversational turns via microphone or typed fallback.
 - Observe real-time turn latency metrics (< 2.5s) and post-call grounded entity extraction.
+- *Capturing Evaluator Call Evidence*: To capture real human speech evidence from your tester call into `docs/EVIDENCE.md`, run:
+  `python backend/scripts/capture_evidence.py --communication-id <id-from-tester-call>`
 
 ### Step 5: Governance Audit Trail & CSV Export
 - Navigate to **Governance**.
@@ -38,3 +40,4 @@
 | **00:10 - 00:25** | Campaign builder screen highlighting voice configuration for Hindi, Telugu, and English. | [OWNER TO SUPPLY: How campaigns configure Gnani Prisma and Timbre voices] |
 | **00:25 - 00:45** | Live tester session in action: audio waveform, turns in Hindi/Telugu, and post-call extraction card. | [OWNER TO SUPPLY: Demonstration of live voice interaction and grounded extraction] |
 | **00:45 - 00:60** | Governance view displaying enforced compliance gates (DND, calling hours) and audit log. | [OWNER TO SUPPLY: Closing statement on regulatory compliance and transparency] |
+

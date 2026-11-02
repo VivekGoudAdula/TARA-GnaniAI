@@ -161,7 +161,7 @@ def write_report(transcripts: list[dict]) -> None:
 
     lines.extend([
         "## Overall Verdict",
-        "- **Audited By**: `backend/scripts/prompt_check.py`",
+        "- **Audited By**: `backend/scripts/prompt_check.py` using runtime model `qwen/qwen3.8-27b` (Groq API)",
         "- **Status**: **PASSED**. Default prompts across English, Hindi, and Telugu adhere strictly to responsible AI lending disclosures and regulatory guidelines.",
     ])
 

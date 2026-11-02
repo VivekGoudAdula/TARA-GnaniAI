@@ -6,7 +6,7 @@ TARA is an AI voice agent platform for personal loan inquiries built on Gnani AI
 flowchart LR
     Browser["Client Browser / WebRTC"] <-->|"HTTP / WS"| FastAPI["FastAPI Backend (TARA)"]
     FastAPI <-->|"Prisma v3.0 REST / Timbre v2.5 REST"| Gnani["Gnani AI Cloud"]
-    FastAPI <-->|"Groq / LiteLLM"| LLM["Llama 3.3 70B (LLM)"]
+    FastAPI <-->|"Groq / LiteLLM"| LLM["Qwen 2.5 (qwen/qwen3.8-27b)"]
     FastAPI <-->|"Motor (Async Driver)"| Mongo[("MongoDB")]
 ```
 
@@ -18,7 +18,7 @@ flowchart LR
 | **Text-to-Speech (TTS)** | **Gnani AI** | Timbre v2.5 REST (`/api/v1/tts/inference`), voices: Nalini (en/hi), Suhana (te) |
 | **Language Detection** | **Gnani AI** | `detected_language_code` returned directly by Prisma v3.0 |
 | **Voice Orchestration** | *Custom (In-house)* | Custom WebSocket session manager (`app/voice/session.py`); Agent Builder / Evon NOT used |
-| **LLM Reasoning** | *External (Groq)* | Llama 3.3 70B Versatile for single-turn pacing and grounded extraction |
+| **LLM Reasoning** | *External (Groq)* | qwen/qwen3.8-27b via Groq for single-turn pacing and grounded extraction |
 | **Telephony Dispatch** | *Simulated Provider* | In-browser WebRTC tester (`TesterCallView`); Exotel/Twilio interface specified but mocked |
 
 ## Quickstart (6 Commands)

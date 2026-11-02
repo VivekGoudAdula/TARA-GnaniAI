@@ -220,7 +220,7 @@ Measured with 5 consecutive real live pipeline turns per language on 2026-11-02 
 - **Why**:
   1. STT WebSocket delivers final transcripts in **~1.5s–1.6s** from end of user speech (vs ~5.4s for REST).
   2. TTS SSE delivers first audio chunk in **~1.9s–2.1s** (consistently faster than WebSocket and REST).
-  3. Combined with Groq LLM streaming (first token in ~150–250ms), sentence-level pipelining achieves a conversation turn latency around **~2.1s–2.6s**, meeting the ~2.5s real-time target.
+  3. Combined with Groq LLM streaming (qwen/qwen3.8-27b, first token in ~150–250ms), sentence-level pipelining achieves a conversation turn latency around **~2.1s–2.6s**, meeting the ~2.5s real-time target.
   4. Audio chunks stream back to the browser immediately as base64/binary over the session WebSocket.
 
 

@@ -25,7 +25,7 @@ export default function WizardStep1Details({
           type="text"
           value={campaignData.name}
           onChange={(e) => setCampaignData({ ...campaignData, name: e.target.value })}
-          placeholder="e.g. Festive Gold Loan Outreach 2026"
+          placeholder="e.g. Festive Personal Loan Outreach 2026"
           className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
       </div>
@@ -82,7 +82,7 @@ export default function WizardStep1Details({
           type="text"
           value={campaignData.objective}
           onChange={(e) => setCampaignData({ ...campaignData, objective: e.target.value })}
-          placeholder="e.g. Inform eligible pre-approved users of special 8.5% interest rate"
+          placeholder="e.g. Inform eligible pre-approved users of special interest rates"
           className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
         />
       </div>

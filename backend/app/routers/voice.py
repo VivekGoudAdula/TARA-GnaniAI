@@ -127,12 +127,22 @@ async def websocket_voice_endpoint(
                 dur = float(data.get("duration_ms", 0.0))
                 if audio_b64:
                     raw_audio = base64.b64decode(audio_b64)
-                    res = await stt_fallback.stt_transcribe(
-                        raw_audio, filename="turn.wav", language_code=session.language
-                    )
-                    await session.handle_user_turn(
-                        res.transcript, dur, res.latency_ms, detected_lang=res.detected_language_code
-                    )
+                    try:
+                        res = await stt_fallback.stt_transcribe(
+                            raw_audio, filename="turn.wav", language_code=session.language
+                        )
+                        await session.handle_user_turn(
+                            res.transcript, dur, res.latency_ms, detected_lang=res.detected_language_code
+                        )
+                    except Exception as exc:
+                        reason = "gnani_429" if "429" in str(exc) else ("gnani_timeout" if "timeout" in str(exc).lower() else "gnani_stt_error")
+                        session.last_error = reason
+                        await send_ws({
+                            "type": "turn_error",
+                            "machine_reason": reason,
+                            "message": "I am having trouble hearing you. Please tap retry to repeat your turn.",
+                            "can_retry": True,
+                        })
 
             elif msg_type == "barge_in":
                 await session.barge_in()

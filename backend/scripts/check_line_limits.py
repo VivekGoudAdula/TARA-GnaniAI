@@ -57,3 +57,4 @@ def scan_files() -> int:
 
 if __name__ == "__main__":
     sys.exit(scan_files())
+

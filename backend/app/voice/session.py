@@ -62,6 +62,7 @@ class VoiceSession:
         self._interrupted = False
         self._session_doc: Optional[Dict[str, Any]] = None
         self.extraction: Optional[Any] = None
+        self.last_error: Optional[str] = None
 
     async def _send_event(self, msg: Dict[str, Any]) -> None:
         """Deliver event to websocket listener, supporting both sync and async callbacks."""
@@ -126,21 +127,16 @@ class VoiceSession:
                 llm_ms = round((time.perf_counter() - t_llm_start) * 1000, 1)
 
             if not self._interrupted and agent_response:
+                self.last_error = None
                 self.messages.append({"role": "assistant", "content": agent_response})
                 tts_first_ms, total_turn_ms = await self._synthesize_and_stream(
                     agent_response, turn_num=turn_num, t_turn_start=t_user_speech_end
                 )
                 self.turns.append({
-                    "turn_num": turn_num,
-                    "user_audio_duration_ms": user_audio_duration_ms,
-                    "stt_ms": stt_ms,
-                    "llm_ms": llm_ms,
-                    "tts_first_audio_ms": tts_first_ms,
-                    "total_turn_ms": total_turn_ms,
-                    "user_transcript": user_text,
-                    "agent_response": agent_response,
-                    "language": self.language,
-                    "barge_in": self._interrupted,
+                    "turn_num": turn_num, "user_audio_duration_ms": user_audio_duration_ms,
+                    "stt_ms": stt_ms, "llm_ms": llm_ms, "tts_first_audio_ms": tts_first_ms,
+                    "total_turn_ms": total_turn_ms, "user_transcript": user_text,
+                    "agent_response": agent_response, "language": self.language, "barge_in": self._interrupted,
                 })
                 await self._send_event({"type": "turn_metrics", "metrics": self.turns[-1]})
 
@@ -150,7 +146,12 @@ class VoiceSession:
                 await self._set_state(SessionState.LISTENING)
 
         except Exception as exc:
-            await self._send_event({"type": "error", "message": f"Turn error: {str(exc)}"})
+            reason = "gnani_429" if "429" in str(exc) else ("gnani_timeout" if "timeout" in str(exc).lower() else "provider_error")
+            self.last_error = reason
+            await self._send_event({
+                "type": "turn_error", "machine_reason": reason,
+                "message": "I had trouble processing that turn. Please retry.", "can_retry": True,
+            })
             await self._set_state(SessionState.LISTENING)
 
     async def barge_in(self) -> None:
@@ -214,18 +215,15 @@ class VoiceSession:
         )
         self.extraction = extracted
 
+        status_val = "failed" if (error or self.last_error) else "completed"
         doc = {
-            "session_id": self.session_id,
-            "tenant_id": self.tenant_id,
-            "input_mode": self.input_mode,
-            "lead_id": self.config.get("lead_id"),
+            "session_id": self.session_id, "tenant_id": self.tenant_id,
+            "status": status_val, "machine_reason": error or self.last_error,
+            "input_mode": self.input_mode, "lead_id": self.config.get("lead_id"),
             "campaign_id": self.config.get("campaign_id"),
-            "started_at": self.started_at,
-            "ended_at": self.ended_at,
-            "duration_seconds": duration_sec,
-            "turns": self.turns,
-            "extracted_data": extracted,
-            "error": error,
+            "started_at": self.started_at, "ended_at": self.ended_at,
+            "duration_seconds": duration_sec, "turns": self.turns,
+            "extracted_data": extracted, "error": error,
         }
         self._session_doc = doc
         try:

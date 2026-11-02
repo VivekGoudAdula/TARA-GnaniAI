@@ -158,3 +158,85 @@ async def test_tenant_isolation_csv_and_communication_api():
         csv_text = csv_res.text
         assert "Alice" in csv_text
         assert "SecretBob" not in csv_text
+
+
+@pytest.mark.asyncio
+async def test_launcher_concurrency_and_min_gap_pacing_with_fake_clock():
+    """Verify concurrency 1 and 5s min gap between call starts using a fake clock."""
+    from app.campaigns.launcher import launch_campaign
+    from app.contracts.communication import CommunicationResponse
+
+    db = get_db()
+    t_id = f"ten_pace_{uuid.uuid4().hex[:6]}"
+    camp_id = f"camp_pace_{uuid.uuid4().hex[:6]}"
+    prod_id = f"prd_pace_{uuid.uuid4().hex[:4]}"
+    rec1 = f"r_pace_1_{uuid.uuid4().hex[:4]}"
+    rec2 = f"r_pace_2_{uuid.uuid4().hex[:4]}"
+
+    await db["products"].insert_one({"tenant_id": t_id, "product_id": prod_id, "name": "Personal Loan", "active": True})
+    await db["campaigns"].insert_one({
+        "id": camp_id, "tenant_id": t_id, "name": "Pacing Test",
+        "product_id": prod_id, "product_name": "Personal Loan",
+        "audience_type": "customers", "status": "ready",
+        "recipient_count": 2, "current_voice_config_version": 1,
+    })
+    for r_id, fn, ph in [(rec1, "Aarav", "+919000011111"), (rec2, "Rohan", "+919000022222")]:
+        await db["customers"].insert_one({
+            "tenant_id": t_id, "record_id": r_id, "full_name": fn,
+            "phone": ph, "consent": True, "dnd": False, "preferred_language": "en-IN",
+        })
+        await db["campaign_recipients"].insert_one({
+            "campaign_id": camp_id, "tenant_id": t_id, "record_id": r_id,
+            "first_name": fn, "preferred_language": "en-IN", "eligible": True, "contactable": True,
+        })
+    await db["campaign_voice_configs"].insert_one({
+        "campaign_id": camp_id, "tenant_id": t_id, "version": 1,
+        "config": {
+            "default_language": "en-IN",
+            "system_prompt": "Help customer.",
+            "opening_message": "Hello {{first_name}}.",
+            "conversation_objective": "Discuss options",
+            "success_condition": "Customer interested",
+            "info_to_collect": [{"field": "loan_amount", "question": "Amount?", "required": True}],
+        }
+    })
+
+    # Fake clock and sleeper tracking timeline and concurrency
+    class FakeClock:
+        def __init__(self):
+            self.t = 1000.0
+        def now(self):
+            return self.t
+        async def sleep(self, seconds: float):
+            self.t += seconds
+
+    clock = FakeClock()
+
+    class MockCommPort:
+        def __init__(self):
+            self.dispatches = []
+        async def dispatch(self, tenant_id: str, request: Any):
+            self.dispatches.append((request.recipient_ref.record_id, clock.now()))
+            return CommunicationResponse(communication_id=f"comm_{uuid.uuid4().hex[:6]}", status="queued")
+
+    port = MockCommPort()
+
+    res = await launch_campaign(
+        tenant_id=t_id,
+        campaign_id=camp_id,
+        confirm_count=2,
+        mode="test",
+        comm_port=port,
+        concurrency=1,
+        min_gap_seconds=5.0,
+        clock=clock.now,
+        sleep_func=clock.sleep,
+    )
+
+    pacing_info = res["pacing"]
+    assert pacing_info["max_in_flight_observed"] == 1, "Concurrency 1 violated: more than 1 in flight!"
+    timestamps = [t for _, t in pacing_info["timestamps"]]
+    assert len(timestamps) == 2
+    gap = timestamps[1] - timestamps[0]
+    assert gap >= 5.0, f"Min gap 5.0s violated: actual gap was {gap}s!"
+

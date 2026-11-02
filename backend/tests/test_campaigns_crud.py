@@ -48,14 +48,14 @@ async def test_campaign_crud_and_tenant_isolation(auth_headers_bank1, auth_heade
     db = get_db()
     prod_id = f"prd_{uuid.uuid4().hex[:8]}"
     await db["products"].insert_one({
-        "tenant_id": "ten_camp_1", "product_id": prod_id, "name": "Gold Loan", "active": True
+        "tenant_id": "ten_camp_1", "product_id": prod_id, "name": "Personal Loan", "active": True
     })
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Create campaign as Bank 1
         res = await client.post("/api/campaigns", json={
-            "name": "Q1 Gold Outreach", "product_id": prod_id, "audience_type": "customers",
+            "name": "Q1 Personal Loan Outreach", "product_id": prod_id, "audience_type": "customers",
             "objective": "Promote low rate", "description": "Existing borrowers"
         }, headers=auth_headers_bank1)
         assert res.status_code == 201
@@ -70,4 +70,4 @@ async def test_campaign_crud_and_tenant_isolation(auth_headers_bank1, auth_heade
         # Bank 1 can read
         read_res = await client.get(f"/api/campaigns/{camp_id}", headers=auth_headers_bank1)
         assert read_res.status_code == 200
-        assert read_res.json()["name"] == "Q1 Gold Outreach"
+        assert read_res.json()["name"] == "Q1 Personal Loan Outreach"

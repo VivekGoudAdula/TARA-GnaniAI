@@ -14,7 +14,7 @@ flowchart TD
     CompGate -->|"Authorized Dispatch"| Provider["ProviderAdapter (Simulated / Live Tester)"]
     Provider -->|"Task URL / Token"| Client
     VoiceSession <-->|"Prisma v3.0 REST"| GnaniSTT["Gnani Prisma STT (indic-auto)"]
-    VoiceSession <-->|"Groq / Llama 3.3"| LLM["Groq LLM Client"]
+    VoiceSession <-->|"Groq / Qwen 2.5"| LLM["Groq LLM Client (qwen/qwen3.8-27b)"]
     VoiceSession <-->|"Timbre v2.5 REST"| GnaniTTS["Gnani Timbre TTS"]
     VoiceSession -->|"Outcomes / Extraction"| DB[("MongoDB (Tenants, Sessions, Audits)")]
 ```
