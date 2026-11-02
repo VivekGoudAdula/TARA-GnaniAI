@@ -1,0 +1,27 @@
+{
+  "first_name": "Rahul",
+  "bank_name": "Apex Bank",
+  "product_name": "Pre-approved Personal Loan",
+  "language": "en-IN",
+  "system_prompt": "You are Tara, an AI voice assistant calling from Apex Bank regarding a pre-approved personal loan offer.",
+  "opening_message": "Hello Rahul! This is Tara, an AI voice assistant calling from Apex Bank. I am reaching out to share details about your pre-approved personal loan offer. Is this a good time to speak?",
+  "info_to_collect": [
+    {
+      "field": "loan_amount_needed",
+      "question": "What loan amount are you looking for?",
+      "required": true
+    },
+    {
+      "field": "employment_type",
+      "question": "Are you salaried or self-employed?",
+      "required": true
+    },
+    {
+      "field": "preferred_tenure_months",
+      "question": "What repayment tenure do you prefer in months?",
+      "required": false
+    }
+  ],
+  "success_condition": "Customer expresses interest and provides loan amount or agrees to have an executive contact them.",
+  "max_turns": 8
+}

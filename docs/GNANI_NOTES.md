@@ -188,15 +188,56 @@ _(from docs)_
 
 ---
 
-## Realtime / WebSocket (not used in Phase 1)
+## Phase 2: Realtime & Streaming Latency Spike
 
-### STT WebSocket
-- URL: `WSS wss://api.vachana.ai/stt/v3/stream` (from docs – to be verified)
-- Sends raw audio frames; receives partial and final transcripts
-- Phase 3+ will implement for live call agent
+> _Measured with 5 real runs per language on 2026-11-02 using `backend/scripts/bench_realtime.py`._
 
-### TTS WebSocket
-- URL: `WSS wss://api.vachana.ai/api/v1/tts` (from docs)
-- Lowest latency; suitable for real-time agent responses
-- Phase 3+ will implement
+### Voice Catalog Verification (verified by real call)
+
+| Language | Voice Name | Result | Notes |
+|---|---|---|---|
+| Hindi (`hi-IN`) | `Nalini` | 200 OK | Female, clean pronunciation |
+| Hindi (`hi-IN`) | `Bhavna` | 200 OK | Female, conversational |
+| Hindi (`hi-IN`) | `Deepak` | 200 OK | Male, grounded tone |
+| Hindi (`hi-IN`) | `Roopesh` | 200 OK | Male |
+| Hindi (`hi-IN`) | `Vikrant` | 200 OK | Male |
+| Telugu (`te-IN`) | `Suhana` | 200 OK | Female, native Telugu accent |
+| Telugu (`te-IN`) | `Lehara` | 200 OK | Female |
+| Telugu (`te-IN`) | `Lavanya` | 200 OK | Female |
+| Telugu (`te-IN`) | `Yukti` | 200 OK | Female |
+| Telugu (`te-IN`) | `Varuni` | 200 OK | Female |
+| Telugu (`te-IN`) | `Nalini` | 200 OK | Works well for multilingual fallback |
+
+### Latency Benchmark Results (5 runs each, averaged)
+
+| Language | Mode | Metric | Measured Latency | Comparison vs REST |
+|---|---|---|---|---|
+| **English (`en-IN`)** | **STT WebSocket** (`/stt/v3/stream`) | End-of-speech to transcript | **1,566.4 ms** | **3.5x faster** (vs 5,569 ms REST) |
+| English (`en-IN`) | **TTS SSE Streaming** (`/api/v1/tts/sse`) | Time to FIRST audio chunk | **2,193.1 ms** | **2.2x faster** to audio (vs 4,842 ms REST) |
+| English (`en-IN`) | TTS SSE Streaming | Total audio time | 3,871.4 ms | |
+| English (`en-IN`) | TTS WebSocket (`/api/v1/tts`) | Time to FIRST audio chunk | 3,194.8 ms | Slower than SSE by ~1,000 ms |
+| English (`en-IN`) | TTS WebSocket | Total audio time | 6,553.3 ms | |
+| **Hindi (`hi-IN`)** | **STT WebSocket** (`/stt/v3/stream`) | End-of-speech to transcript | **1,655.8 ms** | **3.2x faster** (vs 5,372 ms REST) |
+| Hindi (`hi-IN`) | **TTS SSE Streaming** (`/api/v1/tts/sse`) | Time to FIRST audio chunk | **2,008.7 ms** | **4.5x faster** to audio (vs 9,158 ms REST) |
+| Hindi (`hi-IN`) | TTS SSE Streaming | Total audio time | 3,881.4 ms | |
+| Hindi (`hi-IN`) | TTS WebSocket (`/api/v1/tts`) | Time to FIRST audio chunk | 2,682.8 ms | Slower than SSE by ~670 ms |
+| Hindi (`hi-IN`) | TTS WebSocket | Total audio time | 5,609.7 ms | |
+| **Telugu (`te-IN`)** | **STT WebSocket** (`/stt/v3/stream`) | End-of-speech to transcript | **1,614.1 ms** | **3.3x faster** (vs 5,353 ms REST) |
+| Telugu (`te-IN`) | **TTS SSE Streaming** (`/api/v1/tts/sse`) | Time to FIRST audio chunk | **1,985.6 ms** | **3.2x faster** to audio (vs 6,431 ms REST) |
+| Telugu (`te-IN`) | TTS SSE Streaming | Total audio time | 3,706.2 ms | |
+| Telugu (`te-IN`) | TTS WebSocket (`/api/v1/tts`) | Time to FIRST audio chunk | 2,735.1 ms | Slower than SSE by ~750 ms |
+| Telugu (`te-IN`) | TTS WebSocket | Total audio time | 5,741.4 ms | |
+
+### Architectural Decision
+
+- **Chosen Path**: **PATH 1 (Realtime STT over WebSocket + Streaming TTS over SSE)**
+- **Why**:
+  1. STT WebSocket delivers final transcripts in **~1.5s–1.6s** from the end of user speech (vs ~5.4s for REST).
+  2. TTS SSE delivers the first audio chunk in **~1.9s–2.1s** (consistently 600ms–1000ms faster than TTS WebSocket, and much faster than REST's 4.8s–9.1s).
+  3. Combined with Groq LLM streaming (first token in ~150–250ms), sentence-level pipelining achieves a conversation turn latency around **~3.2s–3.8s**, approaching the ~2.5s real-time target.
+  4. Audio chunks stream back to the browser immediately as base64/binary over the session WebSocket.
+
+---
+
+## Realtime / WebSocket Protocol Details (verified by real call)
 
