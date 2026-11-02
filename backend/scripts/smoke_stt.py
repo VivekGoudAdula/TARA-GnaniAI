@@ -15,6 +15,10 @@ import asyncio
 import sys
 from pathlib import Path
 
+# Configure utf-8 encoding for Windows terminal printing
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Allow running from the backend/ directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

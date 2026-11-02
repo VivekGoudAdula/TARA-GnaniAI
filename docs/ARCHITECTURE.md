@@ -65,7 +65,7 @@ tara-gnani/
 - Voice/LLM receives only: first name, bank name, product, language, prompt text. Never income, scores, or sensitive fields.
 
 ## Future phases
-- **Phase 2**: Auth (JWT), tenant model, SQLite schema, CSV import
+- **Phase 2**: Auth (JWT), tenant model, MongoDB schema/indexes (via Motor/PyMongo), CSV import
 - **Phase 3**: Scoring engine (synthetic data, labelled)
 - **Phase 4**: Campaign builder UI
 - **Phase 5**: Voice agent (Groq LLM + Gnani STT/TTS real-time loop)

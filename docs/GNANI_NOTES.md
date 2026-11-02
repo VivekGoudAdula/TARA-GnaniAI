@@ -162,27 +162,29 @@ _(from docs)_
 
 ## Live Call Results – Phase 1
 
-> _Fill in after running smoke_tts.py and smoke_stt.py_
+> _Measured and verified via live calls to https://api.vachana.ai on 2026-11-02._
 
 ### TTS latencies (verified by real call)
 
 | Language | Voice | Text length | Latency (ms) | File size | Status |
 |---|---|---|---|---|---|
-| en-IN | Nalini | ~65 chars | TBD | TBD | pending |
-| hi-IN | Nalini | ~45 chars | TBD | TBD | pending |
-| te-IN | Nalini | ~42 chars | TBD | TBD | pending |
+| en-IN | Nalini | ~68 chars | 4842.9 ms | 384,044 bytes | 200 OK (verified by real call) |
+| hi-IN | Nalini | ~45 chars | 9158.9 ms | 337,964 bytes | 200 OK (verified by real call) |
+| te-IN | Nalini | ~42 chars | 6431.1 ms | 322,604 bytes | 200 OK (verified by real call) |
 
 ### STT latencies & indic-auto detection (verified by real call)
 
 | Audio | Language sent | Detected language | Transcript | Latency (ms) | Status |
 |---|---|---|---|---|---|
-| en.wav (from TTS) | indic-auto | TBD | TBD | TBD | pending |
-| hi.wav (from TTS) | indic-auto | TBD | TBD | TBD | pending |
-| te.wav (from TTS) | indic-auto | TBD | TBD | TBD | pending |
+| en.wav (from TTS) | indic-auto | `en-IN` | "Hello, this is a test message from Tara, your financial assistant." | 5569.7 ms | 200 OK (verified by real call) |
+| hi.wav (from TTS) | indic-auto | `hi-IN` | "नमस्ते, यह तारा की ओर से एक परीक्षण संदेश है।" | 5372.3 ms | 200 OK (verified by real call) |
+| te.wav (from TTS) | indic-auto | `te-IN` | "నమస్కారం, ఇది తారా నుండి ఒక పరీక్షా సందేశం." | 5353.1 ms | 200 OK (verified by real call) |
 
 ### What did NOT work / caveats
 
-- TBD after live runs. Will update here.
+1. **Windows Console Encoding**: Default Python stdout on Windows uses `cp1252` encoding which throws `UnicodeEncodeError` when printing Hindi (Devanagari) or Telugu Unicode strings. Resolved by setting `sys.stdout.reconfigure(encoding="utf-8")` on startup.
+2. **Standard Sandbox Sockets**: On Windows, default sandbox blocks outbound network and loop socket creation. Real live API calls to `api.vachana.ai` and live pytest runners must be granted outbound network.
+3. **TTS Batch Latency**: REST TTS synthesis roundtrip is ~4.8s–9.1s for short sentences. For conversational turn-taking in Phase 5, the WebSocket realtime or SSE streaming endpoint will be needed to keep latency under 1.5s.
 
 ---
 

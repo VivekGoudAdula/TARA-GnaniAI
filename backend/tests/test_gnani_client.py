@@ -62,9 +62,14 @@ def _patch_client(*responses: httpx.Response):
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture(autouse=True)
-def set_api_key(monkeypatch):
-    """Ensure GNANI_API_KEY is set for all non-live tests."""
-    monkeypatch.setenv("GNANI_API_KEY", "test-key-1234")
+def set_api_key(request, monkeypatch):
+    """Ensure GNANI_API_KEY is set for mocked tests, or loaded from .env for live tests."""
+    if "live" in request.keywords:
+        from dotenv import load_dotenv
+        from pathlib import Path
+        load_dotenv(Path(__file__).parent.parent.parent / ".env", override=True)
+    else:
+        monkeypatch.setenv("GNANI_API_KEY", "test-key-1234")
 
 
 @pytest.fixture
@@ -185,10 +190,11 @@ async def test_tts_payment_error(client):
 def test_missing_api_key_raises(monkeypatch):
     """GnaniClient raises RuntimeError when GNANI_API_KEY is not set."""
     monkeypatch.delenv("GNANI_API_KEY", raising=False)
-    import providers.gnani_client as mod
-    importlib.reload(mod)
-    with pytest.raises(RuntimeError, match="GNANI_API_KEY"):
-        mod.GnaniClient()
+    with patch("dotenv.load_dotenv"):
+        import providers.gnani_client as mod
+        importlib.reload(mod)
+        with pytest.raises(RuntimeError, match="GNANI_API_KEY"):
+            mod.GnaniClient()
 
 
 # ── Live tests (skipped by default) ──────────────────────────────────────────
