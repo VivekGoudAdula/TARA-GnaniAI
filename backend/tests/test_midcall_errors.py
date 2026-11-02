@@ -135,3 +135,4 @@ async def test_stt_midcall_simulated_error_and_persistence():
     doc = await session.end_session()
     assert doc["status"] == "failed"
     assert doc["machine_reason"] == "gnani_429"
+

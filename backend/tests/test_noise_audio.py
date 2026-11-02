@@ -89,3 +89,4 @@ def test_reference_source_rule():
             # Must not contain STT artifacts like punctuation-tagged request IDs
             assert "request_id" not in s
             assert "{" not in s and "}" not in s
+
