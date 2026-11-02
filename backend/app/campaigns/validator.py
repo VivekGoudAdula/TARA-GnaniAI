@@ -140,7 +140,9 @@ async def render_recipient_preview(
     cfg = vconfig_doc.get("config", {}) if vconfig_doc else {}
 
     raw_sys = cfg.get("system_prompt", "Assist {{first_name}} regarding {{product_name}} from {{bank_name}}.")
-    raw_open = cfg.get("opening_message", COMPLIANT_DISCLOSURE_PREFIX + "How are you today?")
+    raw_open = cfg.get("opening_message", "How are you today?")
+    if raw_open and not has_ai_disclosure(raw_open):
+        raw_open = COMPLIANT_DISCLOSURE_PREFIX + raw_open
 
     ctx = {
         "first_name": first_name,

@@ -10,12 +10,13 @@ export default function Sidebar({ activeNav, setActiveNav }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'campaigns', label: 'Campaigns', icon: '📢' },
+    { id: 'interactions', label: 'Interactions', icon: '📜' },
+    { id: 'governance', label: 'Governance & Gate', icon: '🛡️' },
     { id: 'customers', label: 'Customers', icon: '👥' },
     { id: 'leads', label: 'Leads', icon: '🎯' },
     { id: 'products', label: 'Products', icon: '💳' },
     { id: 'import', label: 'Data Import', icon: '📥' },
     { id: 'voice', label: 'Live Voice Agent', icon: '🎙️' },
-    { id: 'history', label: 'Session History', icon: '📜' },
   ]
 
   return (

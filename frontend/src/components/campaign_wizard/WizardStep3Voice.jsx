@@ -95,7 +95,7 @@ export default function WizardStep3Voice({ campaignId, onNext, onBack }) {
         </button>
         {['WhatsApp', 'SMS', 'Email'].map((ch) => (
           <button key={ch} type="button" disabled className="pb-2 px-3 text-xs font-medium text-gray-400 border-b-2 border-transparent cursor-not-allowed flex items-center gap-1.5">
-            <span>{ch === 'WhatsApp' ? '💬' : ch === 'SMS' ? '📱' : '✉️'}</span> {ch} <span className="bg-gray-100 text-gray-500 text-[10px] px-1 py-0.2 rounded">Phase 5</span>
+            <span>{ch === 'WhatsApp' ? '💬' : ch === 'SMS' ? '📱' : '✉️'}</span> {ch} <span className="bg-gray-100 text-gray-500 text-[10px] px-1 py-0.2 rounded">Roadmap, not built</span>
           </button>
         ))}
       </div>

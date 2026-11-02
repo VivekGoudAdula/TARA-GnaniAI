@@ -12,6 +12,9 @@ import VoiceCheck from './components/VoiceCheck'
 import CampaignsList from './components/CampaignsList'
 import CampaignWizard from './components/CampaignWizard'
 import CampaignDetail from './components/CampaignDetail'
+import InteractionHistory from './components/InteractionHistory'
+import GovernanceView from './components/GovernanceView'
+import TesterCallView from './components/TesterCallView'
 
 function MainLayout() {
   const { user, token } = useAuth()
@@ -76,7 +79,7 @@ function MainLayout() {
               Dev Audio Check
             </button>
             <span className="text-[11px] bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full font-bold border border-brand-200">
-              Phase 4 – Campaign Builder
+              Phase 5 – Communication &amp; Launch
             </span>
           </div>
         </header>
@@ -105,6 +108,8 @@ function MainLayout() {
               />
             )
           )}
+          {activeNav === 'interactions' && <InteractionHistory />}
+          {activeNav === 'governance' && <GovernanceView />}
           {activeNav === 'customers' && <RecordsTable recordType="customers" />}
           {activeNav === 'leads' && <RecordsTable recordType="leads" />}
           {activeNav === 'products' && <ProductsView />}
@@ -119,6 +124,12 @@ function MainLayout() {
 }
 
 export default function App() {
+  const path = window.location.pathname
+  if (path.startsWith('/call/')) {
+    const token = path.replace('/call/', '')
+    return <TesterCallView token={token} onBack={() => { window.location.href = '/' }} />
+  }
+
   return (
     <AuthProvider>
       <MainLayout />

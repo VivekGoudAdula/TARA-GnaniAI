@@ -49,13 +49,29 @@ async def websocket_voice_endpoint(
     """Bi-directional WebSocket for live voice interaction session with tenant attribution."""
     await websocket.accept()
 
+    db = get_db()
     tenant_id = None
+    call_task = None
+
     if token:
-        try:
-            token_user = decode_access_token(token)
-            tenant_id = token_user.tenant_id
-        except Exception:
-            pass
+        if token.startswith("tok_"):
+            task_doc = await db["call_tasks"].find_one({"token": token})
+            if task_doc and not task_doc.get("used", False):
+                call_task = task_doc
+                tenant_id = task_doc.get("tenant_id")
+                now = datetime.now(timezone.utc)
+                await db["call_tasks"].update_one({"token": token}, {"$set": {"status": "in_progress", "started_at": now}})
+                if task_doc.get("communication_id"):
+                    await db["communications"].update_one(
+                        {"communication_id": task_doc["communication_id"]},
+                        {"$set": {"status": "in_progress", "started_at": now}},
+                    )
+        else:
+            try:
+                token_user = decode_access_token(token)
+                tenant_id = token_user.tenant_id
+            except Exception:
+                pass
 
     async def send_ws(message: Dict[str, Any]) -> None:
         try:
@@ -63,9 +79,25 @@ async def websocket_voice_endpoint(
         except Exception:
             pass
 
-    config = load_default_config()
-    if tenant_id:
-        config["tenant_id"] = tenant_id
+    if call_task:
+        rendered = call_task.get("rendered", {})
+        config = {
+            "first_name": call_task.get("recipient_first_name", rendered.get("first_name", "Customer")),
+            "bank_name": call_task.get("bank_name", rendered.get("bank_name", "Bank")),
+            "product_name": call_task.get("product_name", rendered.get("product_name", "Product")),
+            "language": call_task.get("language", rendered.get("language", "en-IN")),
+            "system_prompt": rendered.get("system_prompt", ""),
+            "opening_message": rendered.get("opening_message", ""),
+            "info_to_collect": rendered.get("info_to_collect", []),
+            "success_condition": rendered.get("success_condition", ""),
+            "max_turns": rendered.get("max_turns", 8),
+            "voice_by_language": rendered.get("voice_by_language", {"en-IN": "Nalini", "hi-IN": "Nalini", "te-IN": "Suhana"}),
+            "tenant_id": tenant_id,
+        }
+    else:
+        config = load_default_config()
+        if tenant_id:
+            config["tenant_id"] = tenant_id
 
     session = VoiceSession(config=config, send_ws=send_ws)
     stt_fallback = GnaniClient()
@@ -112,6 +144,31 @@ async def websocket_voice_endpoint(
     except Exception as exc:
         await session.end_session(error=str(exc))
         await send_ws({"type": "error", "message": str(exc)})
+    finally:
+        if call_task:
+            now = datetime.now(timezone.utc)
+            comm_id = call_task.get("communication_id")
+            await db["call_tasks"].update_one(
+                {"token": token},
+                {"$set": {"status": "completed", "used": True, "completed_at": now}}
+            )
+            if comm_id:
+                ext = session.extraction
+                dur_s = round((session.ended_at - session.started_at).total_seconds(), 1) if (session.ended_at and session.started_at) else 0.0
+                voices = {str(t.get("turn_index", 0)): t.get("voice_used") for t in session.history if t.get("speaker") == "agent"}
+                await db["communications"].update_one(
+                    {"communication_id": comm_id},
+                    {"$set": {
+                        "status": "completed",
+                        "completed_at": now,
+                        "duration_s": dur_s,
+                        "transcript": session.history,
+                        "extraction": ext.model_dump() if ext else {},
+                        "voice_used": voices,
+                        "outcome": ext.outcome if ext else "completed",
+                        "updated_at": now,
+                    }}
+                )
 
 
 @router.get("/api/voice/sessions")

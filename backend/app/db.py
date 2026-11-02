@@ -81,6 +81,21 @@ async def init_db() -> None:
     await db["campaign_voice_configs"].create_index([("tenant_id", 1), ("campaign_id", 1)])
     await db["campaign_voice_configs"].create_index([("tenant_id", 1), ("campaign_id", 1), ("version", 1)], unique=True)
 
+    # Communication & Audit collections
+    await db["communications"].create_index("tenant_id")
+    await db["communications"].create_index([("tenant_id", 1), ("communication_id", 1)], unique=True)
+    await db["communications"].create_index([("tenant_id", 1), ("idempotency_key", 1)])
+    await db["communications"].create_index([("tenant_id", 1), ("campaign_id", 1)])
+
+    await db["call_tasks"].create_index("token", unique=True)
+    await db["call_tasks"].create_index("tenant_id")
+
+    await db["audit_log"].create_index("tenant_id")
+    await db["audit_log"].create_index([("tenant_id", 1), ("timestamp", -1)])
+    await db["audit_log"].create_index([("tenant_id", 1), ("campaign_id", 1)])
+
+    await db["tenant_allowlist"].create_index([("tenant_id", 1), ("phone", 1)], unique=True)
+
 
 
 async def close_db() -> None:

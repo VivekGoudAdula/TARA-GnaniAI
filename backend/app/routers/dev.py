@@ -21,7 +21,7 @@ _client = GnaniClient()
 
 class STTResponse(BaseModel):
     transcript: str
-    detected_language_code: str
+    detected_language: str
     request_id: str
     latency_ms: float
 
@@ -40,7 +40,12 @@ async def dev_stt(
         )
     except GnaniAPIError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
-    return STTResponse(**result)
+    return STTResponse(
+        transcript=result["transcript"],
+        detected_language=result.get("detected_language_code", ""),
+        request_id=result["request_id"],
+        latency_ms=result["latency_ms"],
+    )
 
 
 # ─── TTS ──────────────────────────────────────────────────────────────────────
