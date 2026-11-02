@@ -13,7 +13,11 @@ from zoneinfo import ZoneInfo
 
 from app.db import get_db
 
-IST = ZoneInfo("Asia/Kolkata")
+try:
+    IST = ZoneInfo("Asia/Kolkata")
+except Exception:
+    IST = timezone(timedelta(hours=5, minutes=30))
+
 SYNTHETIC_PHONE_REGEX = re.compile(r"^(\+91[\s-]?)?90000\d{5}$")
 
 

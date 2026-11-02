@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 from app.auth import (
     TokenUser,
@@ -40,13 +40,13 @@ def check_login_rate_limit(key: str, max_attempts: int = 10, window_sec: float =
 
 class SignupRequest(BaseModel):
     workspace_name: str = Field(..., min_length=2, max_length=100)
-    email: EmailStr
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str = Field(..., min_length=6)
     full_name: str = Field(..., min_length=1)
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str
 
 
