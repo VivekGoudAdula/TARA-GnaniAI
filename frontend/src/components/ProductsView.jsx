@@ -184,58 +184,29 @@ export default function ProductsView() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="font-medium text-gray-700 block mb-1">Min Income (₹)</label>
-                  <input
-                    type="number" required
-                    value={formData.min_income} onChange={(e) => setFormData({ ...formData, min_income: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5"
-                  />
+                  <input type="number" required value={formData.min_income} onChange={(e) => setFormData({ ...formData, min_income: e.target.value })} className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5" />
                 </div>
                 <div>
                   <label className="font-medium text-gray-700 block mb-1">Min Score</label>
-                  <input
-                    type="number" required
-                    value={formData.min_credit_score} onChange={(e) => setFormData({ ...formData, min_credit_score: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5"
-                  />
+                  <input type="number" required value={formData.min_credit_score} onChange={(e) => setFormData({ ...formData, min_credit_score: e.target.value })} className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5" />
                 </div>
                 <div>
                   <label className="font-medium text-gray-700 block mb-1">Age (Min–Max)</label>
                   <div className="flex gap-1">
-                    <input
-                      type="number" required
-                      value={formData.min_age} onChange={(e) => setFormData({ ...formData, min_age: e.target.value })}
-                      className="w-1/2 border border-gray-300 rounded-lg px-2 py-1.5"
-                    />
-                    <input
-                      type="number" required
-                      value={formData.max_age} onChange={(e) => setFormData({ ...formData, max_age: e.target.value })}
-                      className="w-1/2 border border-gray-300 rounded-lg px-2 py-1.5"
-                    />
+                    <input type="number" required value={formData.min_age} onChange={(e) => setFormData({ ...formData, min_age: e.target.value })} className="w-1/2 border border-gray-300 rounded-lg px-2 py-1.5" />
+                    <input type="number" required value={formData.max_age} onChange={(e) => setFormData({ ...formData, max_age: e.target.value })} className="w-1/2 border border-gray-300 rounded-lg px-2 py-1.5" />
                   </div>
                 </div>
               </div>
 
               <div>
                 <label className="font-medium text-gray-700 block mb-1">Allowed Employment (comma-separated)</label>
-                <input
-                  type="text" required
-                  value={formData.employment_types} onChange={(e) => setFormData({ ...formData, employment_types: e.target.value })}
-                  placeholder="salaried, self_employed"
-                  className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5"
-                />
+                <input type="text" required value={formData.employment_types} onChange={(e) => setFormData({ ...formData, employment_types: e.target.value })} placeholder="salaried, self_employed" className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5" />
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t">
-                <button
-                  type="button" onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit" disabled={loading}
-                  className="px-4 py-1.5 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700"
-                >
+                <button type="button" onClick={() => setShowModal(false)} className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={loading} className="px-4 py-1.5 rounded-lg bg-brand-600 text-white font-semibold hover:bg-brand-700">
                   {loading ? 'Saving...' : 'Save Product'}
                 </button>
               </div>
@@ -246,3 +217,4 @@ export default function ProductsView() {
     </div>
   )
 }
+

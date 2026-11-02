@@ -20,9 +20,12 @@
   5. `consent_flag`: Verification of applicant contact consent
 
 ## Evaluation Metrics (Held-out Test Split)
-- **AUC-ROC**: **0.99**
-- **Precision at Top 20%**: **1.0**
+- **AUC-ROC**: **0.99** (synthetic benchmark)
+- **Precision at Top 20%**: **1.0** (synthetic benchmark)
+
+> **Important Notice on Metrics**: AUC-ROC and Precision-at-20% are computed exclusively on **SYNTHETIC labels** produced by a rule generator. They demonstrate the software pipeline and mathematical integration only, and are **NOT evidence of real-world underwriting accuracy or commercial credit performance**.
 
 ## Limitations & Ethical Considerations
 - **Trained on synthetic data**: Model weights are calibrated exclusively on synthetic benchmarks. Must never be used for real statutory credit decisions without live bank calibration and fair lending review.
+- **Pipeline demonstration only**: Does not claim or represent real-world predictive accuracy.
 - **Rule Precedence**: Deterministic eligibility rules always override statistical fit scores.

@@ -138,3 +138,4 @@ async def delete_product(
     res = await db["products"].delete_one({"product_id": product_id, "tenant_id": current_user.tenant_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+

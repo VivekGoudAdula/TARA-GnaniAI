@@ -9,6 +9,7 @@ export default function Sidebar({ activeNav, setActiveNav }) {
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'campaigns', label: 'Campaigns', icon: '📢' },
     { id: 'customers', label: 'Customers', icon: '👥' },
     { id: 'leads', label: 'Leads', icon: '🎯' },
     { id: 'products', label: 'Products', icon: '💳' },
@@ -69,3 +70,4 @@ export default function Sidebar({ activeNav, setActiveNav }) {
     </aside>
   )
 }
+

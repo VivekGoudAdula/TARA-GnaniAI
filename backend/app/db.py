@@ -69,6 +69,19 @@ async def init_db() -> None:
     await db["voice_sessions"].create_index("session_id", unique=True)
     await db["voice_sessions"].create_index("started_at")
 
+    # Campaign collections
+    await db["campaigns"].create_index("tenant_id")
+    await db["campaigns"].create_index([("tenant_id", 1), ("id", 1)], unique=True)
+
+    await db["campaign_recipients"].create_index("tenant_id")
+    await db["campaign_recipients"].create_index([("tenant_id", 1), ("campaign_id", 1)])
+    await db["campaign_recipients"].create_index([("tenant_id", 1), ("campaign_id", 1), ("record_id", 1)], unique=True)
+
+    await db["campaign_voice_configs"].create_index("tenant_id")
+    await db["campaign_voice_configs"].create_index([("tenant_id", 1), ("campaign_id", 1)])
+    await db["campaign_voice_configs"].create_index([("tenant_id", 1), ("campaign_id", 1), ("version", 1)], unique=True)
+
+
 
 async def close_db() -> None:
     """Close active MongoDB client connection if open."""

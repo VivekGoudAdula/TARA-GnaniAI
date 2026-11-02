@@ -120,3 +120,4 @@ async def get_current_profile(current_user: TokenUser = Depends(get_current_user
     if not tenant or not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
     return {"user": user, "tenant": tenant}
+

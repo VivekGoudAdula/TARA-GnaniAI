@@ -5,6 +5,7 @@
 
 ## Core Capabilities
 - Multi-tenant banking platform with strict tenant isolation.
+- Campaign builder with audience preview, snapshot immutability, and versioned voice configs.
 - Explanatory product fit scoring (trained on synthetic data).
 - Voice AI agent calling customers in **Hindi, Telugu, or English** with sub-3s turn latency.
 - Powered by **Gnani Prisma v3.0** (STT), **Timbre v2.5** (TTS), and **Groq** LLMs.
@@ -55,7 +56,13 @@ python scripts/seed_data.py  # seeds Test Bank & Other Bank with synthetic data
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Frontend
+### 2. Demo Credentials (Synthetic Data Only)
+The seed script initializes two isolated workspaces:
+- **Test Bank**: `admin@testbank.com` / `password123` (4 products, 200 customers, 200 leads)
+- **Other Bank**: `admin@otherbank.com` / `password123` (1 product, 10 customers)
+> *All accounts and profiles are demo credentials operating strictly on synthetic data.*
+
+### 3. Frontend
 ```bash
 cd frontend
 npm install
@@ -63,7 +70,7 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-### 3. Run Tests
+### 4. Run Tests
 ```bash
 python -m pytest backend/tests -v -m "not live"
 ```

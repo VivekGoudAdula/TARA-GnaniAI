@@ -203,3 +203,4 @@ export default function RecordsTable({ recordType }) {
     </div>
   )
 }
+
