@@ -46,6 +46,7 @@ PERMITTED_PROMPT_FIELDS = {
     "max_turns",
     "voice_by_language",
     "tenant_id",
+    "input_mode",
 }
 
 LANGUAGE_INSTRUCTIONS = {

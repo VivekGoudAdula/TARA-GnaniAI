@@ -115,12 +115,14 @@ async def websocket_voice_endpoint(
             msg_type = data.get("type")
 
             if msg_type == "user_text":
+                session.input_mode = "synthetic_test" if data.get("synthetic") else "typed"
                 text = data.get("text", "")
                 dur = float(data.get("duration_ms", 0.0))
                 stt_ms = float(data.get("stt_ms", 0.0))
                 await session.handle_user_turn(text, dur, stt_ms)
 
             elif msg_type == "user_audio":
+                session.input_mode = "mic"
                 audio_b64 = data.get("audio_b64", "")
                 dur = float(data.get("duration_ms", 0.0))
                 if audio_b64:
@@ -162,6 +164,7 @@ async def websocket_voice_endpoint(
                         "status": "completed",
                         "completed_at": now,
                         "duration_s": dur_s,
+                        "input_mode": getattr(session, "input_mode", "synthetic_test"),
                         "transcript": session.history,
                         "extraction": ext.model_dump() if ext else {},
                         "voice_used": voices,

@@ -27,6 +27,12 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
+    dev_enabled = os.getenv("DEV_ENDPOINTS", "false").lower() == "true"
+    if not dev_enabled:
+        jwt_secret = os.getenv("JWT_SECRET", "").strip()
+        if not jwt_secret or jwt_secret.startswith("tara_jwt_secret_key"):
+            raise RuntimeError("Production mode (DEV_ENDPOINTS=false) requires an explicit JWT_SECRET set in environment.")
+
     application = FastAPI(
         title="TARA – Targeted Acquisition & Reach Agent",
         version="0.3.0",
@@ -34,10 +40,11 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Allow Vite dev server to call backend during development
+    # Restrict CORS origins via environment (defaulting to local frontend ports)
+    cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",") if o.strip()]
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "*"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -35,6 +35,8 @@ backend/scripts/out/
 *.wav
 *.mp3
 *.ogg
+.noise_cache.json
+*.cache.json
 
 # DB
 *.db

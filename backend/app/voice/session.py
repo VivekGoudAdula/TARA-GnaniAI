@@ -52,6 +52,7 @@ class VoiceSession:
             "en-IN": "Nalini", "hi-IN": "Nalini", "te-IN": "Suhana"
         })
         self.max_turns = config.get("max_turns", 8)
+        self.input_mode = config.get("input_mode", "synthetic_test")
         self.started_at = datetime.now(timezone.utc)
         self.ended_at: Optional[datetime] = None
 
@@ -216,6 +217,7 @@ class VoiceSession:
         doc = {
             "session_id": self.session_id,
             "tenant_id": self.tenant_id,
+            "input_mode": self.input_mode,
             "lead_id": self.config.get("lead_id"),
             "campaign_id": self.config.get("campaign_id"),
             "started_at": self.started_at,
