@@ -3,6 +3,11 @@
   "bank_name": "Apex Bank",
   "product_name": "Pre-approved Personal Loan",
   "language": "en-IN",
+  "voice_by_language": {
+    "en-IN": "Nalini",
+    "hi-IN": "Nalini",
+    "te-IN": "Suhana"
+  },
   "system_prompt": "You are Tara, an AI voice assistant calling from Apex Bank regarding a pre-approved personal loan offer.",
   "opening_message": "Hello Rahul! This is Tara, an AI voice assistant calling from Apex Bank. I am reaching out to share details about your pre-approved personal loan offer. Is this a good time to speak?",
   "info_to_collect": [

@@ -41,9 +41,10 @@ export default function AgentControls({
           {sessionActive && (
             <button
               onClick={interruptSpeech}
+              title="Manual interrupt; automatic barge-in not supported"
               className="px-3 py-1.5 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg border border-amber-200"
             >
-              Interrupt Agent
+              Manual Interrupt
             </button>
           )}
           {!sessionActive ? (
@@ -97,3 +98,4 @@ export default function AgentControls({
     </div>
   )
 }
+

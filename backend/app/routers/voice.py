@@ -1,6 +1,6 @@
 """
 WebSocket voice session endpoint and REST routes for session history and inspection.
-Handles bidirectional audio streaming, real-time events, and MongoDB queries.
+Enforces authentication and tenant isolation across session persistence and queries.
 """
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from app.auth import TokenUser, decode_access_token, get_current_user
 from app.db import get_db
 from app.voice.session import VoiceSession
 from providers.gnani_client import GnaniClient
@@ -31,6 +32,7 @@ def load_default_config() -> Dict[str, Any]:
         "bank_name": "Apex Bank",
         "product_name": "Personal Loan",
         "language": "en-IN",
+        "voice_by_language": {"en-IN": "Nalini", "hi-IN": "Nalini", "te-IN": "Suhana"},
         "system_prompt": "You are Tara, an AI voice assistant.",
         "opening_message": "Hello! This is Tara, an AI assistant.",
         "info_to_collect": [],
@@ -40,9 +42,20 @@ def load_default_config() -> Dict[str, Any]:
 
 
 @router.websocket("/ws/voice")
-async def websocket_voice_endpoint(websocket: WebSocket) -> None:
-    """Bi-directional WebSocket for live voice interaction session."""
+async def websocket_voice_endpoint(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+) -> None:
+    """Bi-directional WebSocket for live voice interaction session with tenant attribution."""
     await websocket.accept()
+
+    tenant_id = None
+    if token:
+        try:
+            token_user = decode_access_token(token)
+            tenant_id = token_user.tenant_id
+        except Exception:
+            pass
 
     async def send_ws(message: Dict[str, Any]) -> None:
         try:
@@ -51,11 +64,13 @@ async def websocket_voice_endpoint(websocket: WebSocket) -> None:
             pass
 
     config = load_default_config()
+    if tenant_id:
+        config["tenant_id"] = tenant_id
+
     session = VoiceSession(config=config, send_ws=send_ws)
     stt_fallback = GnaniClient()
 
     try:
-        # Greet user immediately upon connection
         await session.start()
 
         while True:
@@ -82,7 +97,7 @@ async def websocket_voice_endpoint(websocket: WebSocket) -> None:
                         raw_audio, filename="turn.wav", language_code=session.language
                     )
                     await session.handle_user_turn(
-                        res.transcript, dur, res.latency_ms
+                        res.transcript, dur, res.latency_ms, detected_lang=res.detected_language_code
                     )
 
             elif msg_type == "barge_in":
@@ -100,10 +115,16 @@ async def websocket_voice_endpoint(websocket: WebSocket) -> None:
 
 
 @router.get("/api/voice/sessions")
-async def list_voice_sessions(limit: int = 20) -> List[Dict[str, Any]]:
-    """List recent voice sessions from MongoDB."""
+async def list_voice_sessions(
+    limit: int = 20,
+    current_user: TokenUser = Depends(get_current_user),
+) -> List[Dict[str, Any]]:
+    """List recent voice sessions belonging strictly to current tenant."""
     db = get_db()
-    cursor = db["voice_sessions"].find({}, {"_id": 0}).sort("started_at", -1).limit(limit)
+    cursor = db["voice_sessions"].find(
+        {"tenant_id": current_user.tenant_id}, {"_id": 0}
+    ).sort("started_at", -1).limit(limit)
+
     sessions = []
     async for doc in cursor:
         if "started_at" in doc and doc["started_at"]:
@@ -115,10 +136,15 @@ async def list_voice_sessions(limit: int = 20) -> List[Dict[str, Any]]:
 
 
 @router.get("/api/voice/sessions/{session_id}")
-async def get_voice_session(session_id: str) -> Dict[str, Any]:
-    """Retrieve full session detail including turns and post-call extraction."""
+async def get_voice_session(
+    session_id: str,
+    current_user: TokenUser = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Retrieve full session detail, returning 404 on cross-tenant access."""
     db = get_db()
-    doc = await db["voice_sessions"].find_one({"session_id": session_id}, {"_id": 0})
+    doc = await db["voice_sessions"].find_one(
+        {"session_id": session_id, "tenant_id": current_user.tenant_id}, {"_id": 0}
+    )
     if not doc:
         raise HTTPException(status_code=404, detail="Session not found")
     if "started_at" in doc and doc["started_at"]:

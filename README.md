@@ -1,31 +1,61 @@
 # TARA — Targeted Acquisition & Reach Agent
 
-> Voice-first outreach platform for banks/lenders in India.  
-> Built for the **Gnani AI "Great Indian AI Internship Challenge"** (deadline: Nov 10 2026).
+> Voice-first outreach platform for banks and lenders in India.  
+> Built for the **Gnani AI "Great Indian AI Internship Challenge"**.
 
-## What it does
-- Scores customers/leads for product fit (synthetic data, clearly labelled)
-- Campaign builder selects the audience
-- Voice AI agent calls selected people in **Hindi, Telugu or English**
-- Uses **Gnani Prisma v3.0** (STT) and **Gnani Timbre v2.5** (TTS)
+## Core Capabilities
+- Multi-tenant banking platform with strict tenant isolation.
+- Explanatory product fit scoring (trained on synthetic data).
+- Voice AI agent calling customers in **Hindi, Telugu, or English** with sub-3s turn latency.
+- Powered by **Gnani Prisma v3.0** (STT), **Timbre v2.5** (TTS), and **Groq** LLMs.
 
-## Phase 1 — Scaffold + Voice Verification ✅
+---
 
-### Run the backend
+## Database Setup (MongoDB)
+
+TARA requires MongoDB for multi-tenant data, catalog management, and voice session persistence.
+The application starts with only `.env` filled in.
+
+### Option A: Local MongoDB (Installed Service)
+If MongoDB is installed locally on your system, default `MONGO_URI=mongodb://127.0.0.1:27017` in `.env` connects immediately.
+
+### Option B: Docker Compose
+Run a lightweight MongoDB container:
+```bash
+docker compose up -d
+```
+Then configure in `.env`:
+```env
+MONGO_URI=mongodb://127.0.0.1:27017
+MONGO_DB_NAME=tara_gnani
+```
+
+### Option C: MongoDB Atlas (Cloud)
+Paste your Atlas connection string directly into `.env`:
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority
+MONGO_DB_NAME=tara_gnani
+```
+
+---
+
+## Quickstart
+
+### 1. Backend
 ```bash
 cd backend
 python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
+# Activate:
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
 
 pip install -r requirements.txt
-cp ../.env.example ../.env   # fill in GNANI_API_KEY
+cp ../.env.example ../.env   # fill in GNANI_API_KEY, GROQ_API_KEY
+python scripts/seed_data.py  # seeds Test Bank & Other Bank with synthetic data
 uvicorn app.main:app --reload --port 8000
 ```
 
-### Run the frontend
+### 2. Frontend
 ```bash
 cd frontend
 npm install
@@ -33,31 +63,7 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-### Required .env values for Phase 1
-| Variable | Required | Description |
-|---|---|---|
-| `GNANI_API_KEY` | **YES** | From https://platform.gnani.ai |
-| `DEV_ENDPOINTS` | YES (set `true`) | Enables /api/dev/stt and /api/dev/tts |
-
-### Run smoke tests
+### 3. Run Tests
 ```bash
-cd backend
-# Generate TTS audio first, then round-trip to STT
-python scripts/smoke_tts.py            # saves out/en.wav, out/hi.wav, out/te.wav
-python scripts/smoke_stt.py out/en.wav # transcribe English
-python scripts/smoke_stt.py out/hi.wav # transcribe Hindi
-python scripts/smoke_stt.py out/te.wav # transcribe Telugu
+python -m pytest backend/tests -v -m "not live"
 ```
-
-### Run unit tests
-```bash
-cd backend
-pytest tests/ -v
-```
-
-## Architecture
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-
-## Gnani API notes
-See [docs/GNANI_NOTES.md](docs/GNANI_NOTES.md)
-

@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import close_db, init_db
-from app.routers import dev, health, voice
+from app.routers import auth, dev, health, importer, products, scoring, voice
 
 
 @asynccontextmanager
@@ -26,7 +26,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     application = FastAPI(
         title="TARA – Targeted Acquisition & Reach Agent",
-        version="0.2.0",
+        version="0.3.0",
         description="Voice-first outreach platform built on Gnani AI.",
         lifespan=lifespan,
     )
@@ -41,6 +41,10 @@ def create_app() -> FastAPI:
     )
 
     application.include_router(health.router, prefix="/api")
+    application.include_router(auth.router)
+    application.include_router(products.router)
+    application.include_router(importer.router)
+    application.include_router(scoring.router)
     application.include_router(voice.router)
 
     dev_enabled = os.getenv("DEV_ENDPOINTS", "false").lower() == "true"

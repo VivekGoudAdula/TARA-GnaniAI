@@ -6,10 +6,11 @@ These routes are included in the app only when that flag is set.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from app.auth import TokenUser, get_current_user
 from providers.gnani_client import GnaniClient, GnaniAPIError
 
 router = APIRouter(tags=["dev"])
@@ -26,8 +27,11 @@ class STTResponse(BaseModel):
 
 
 @router.post("/stt", response_model=STTResponse)
-async def dev_stt(audio: UploadFile = File(...)) -> STTResponse:
-    """Transcribe uploaded audio using Gnani Prisma v3.0 (dev endpoint)."""
+async def dev_stt(
+    audio: UploadFile = File(...),
+    current_user: TokenUser = Depends(get_current_user),
+) -> STTResponse:
+    """Transcribe uploaded audio using Gnani Prisma v3.0 (dev endpoint, authenticated)."""
     audio_bytes = await audio.read()
     try:
         result = await _client.stt_transcribe(
@@ -48,8 +52,11 @@ class TTSRequest(BaseModel):
 
 
 @router.post("/tts")
-async def dev_tts(body: TTSRequest) -> Response:
-    """Synthesise speech using Gnani Timbre v2.5 (dev endpoint)."""
+async def dev_tts(
+    body: TTSRequest,
+    current_user: TokenUser = Depends(get_current_user),
+) -> Response:
+    """Synthesise speech using Gnani Timbre v2.5 (dev endpoint, authenticated)."""
     try:
         audio_bytes, content_type, _ = await _client.tts_synthesize(
             text=body.text,

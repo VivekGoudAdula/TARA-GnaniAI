@@ -1,15 +1,17 @@
 """
 Database client and lifecycle management using Motor (async MongoDB driver).
-Provides collection access and schema indexing for voice sessions.
+Provides collection access and schema indexing for voice sessions and tenant-owned entities.
 """
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Optional
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 _client: Optional[AsyncIOMotorClient] = None
+_client_loop = None
 
 
 def get_mongo_uri() -> str:
@@ -23,10 +25,16 @@ def get_db_name() -> str:
 
 
 def get_client() -> AsyncIOMotorClient:
-    """Get or instantiate singleton AsyncIOMotorClient."""
-    global _client
-    if _client is None:
+    """Get or instantiate AsyncIOMotorClient, handling event loop recreation in test runners."""
+    global _client, _client_loop
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    if _client is None or (_client_loop is not None and _client_loop is not current_loop):
         _client = AsyncIOMotorClient(get_mongo_uri())
+        _client_loop = current_loop
     return _client
 
 
@@ -36,12 +44,30 @@ def get_db() -> AsyncIOMotorDatabase:
 
 
 async def init_db() -> None:
-    """Create necessary collection indexes for voice sessions."""
+    """Create necessary collection indexes for multi-tenant isolation and fast lookups."""
     db = get_db()
-    sessions = db["voice_sessions"]
-    # Ensure indexes on session_id and started_at
-    await sessions.create_index("session_id", unique=True)
-    await sessions.create_index("started_at")
+
+    # Tenant-owned collections indexed by tenant_id
+    await db["tenants"].create_index("tenant_id", unique=True)
+    await db["users"].create_index("email", unique=True)
+    await db["users"].create_index("tenant_id")
+
+    await db["products"].create_index("tenant_id")
+    await db["products"].create_index([("tenant_id", 1), ("product_id", 1)], unique=True)
+
+    await db["customers"].create_index("tenant_id")
+    await db["customers"].create_index([("tenant_id", 1), ("phone", 1)], unique=True)
+
+    await db["leads"].create_index("tenant_id")
+    await db["leads"].create_index([("tenant_id", 1), ("phone", 1)], unique=True)
+
+    await db["product_matches"].create_index("tenant_id")
+    await db["product_matches"].create_index([("tenant_id", 1), ("record_id", 1)])
+    await db["product_matches"].create_index([("tenant_id", 1), ("fit_score", -1)])
+
+    await db["voice_sessions"].create_index("tenant_id")
+    await db["voice_sessions"].create_index("session_id", unique=True)
+    await db["voice_sessions"].create_index("started_at")
 
 
 async def close_db() -> None:
